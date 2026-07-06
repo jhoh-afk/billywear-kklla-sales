@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Billywear KKLLA 영업관리</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <section class="auth-screen" id="authScreen">
+      <div class="auth-brand">
+        <div class="brand-mark">KK</div>
+        <div>
+          <strong>Billywear KKLLA</strong>
+          <span>Sales Control Server</span>
+        </div>
+      </div>
+
+      <div class="auth-grid">
+        <section class="panel auth-panel">
+          <div class="panel-header">
+            <div>
+              <h1>로그인</h1>
+              <p>승인된 관리자와 영업사원만 접속할 수 있습니다.</p>
+            </div>
+          </div>
+          <form id="loginForm" class="stacked-form">
+            <label>
+              이메일
+              <input name="email" type="email" required autocomplete="email" placeholder="admin@billywear-kklla.kr" />
+            </label>
+            <label>
+              비밀번호
+              <input name="password" type="password" required autocomplete="current-password" />
+            </label>
+            <button class="primary-button" type="submit">로그인</button>
+          </form>
+          <p class="hint-text">관리자 계정 정보는 서버 폴더의 runtime/admin-login.txt에 저장됩니다.</p>
+        </section>
+
+        <section class="panel auth-panel">
+          <div class="panel-header">
+            <div>
+              <h2>영업사원 회원가입</h2>
+              <p>가입 후 관리자가 승인해야 활동할 수 있습니다.</p>
+            </div>
+          </div>
+          <form id="signupForm" class="stacked-form dense-form">
+            <div class="form-row">
+              <label>
+                이름
+                <input name="name" type="text" required autocomplete="name" />
+              </label>
+              <label>
+                휴대폰
+                <input name="phone" type="tel" required autocomplete="tel" placeholder="010-0000-0000" />
+              </label>
+            </div>
+            <label>
+              이메일
+              <input name="email" type="email" required autocomplete="email" />
+            </label>
+            <div class="form-row">
+              <label>
+                비밀번호
+                <input name="password" type="password" required minlength="8" autocomplete="new-password" />
+              </label>
+              <label>
+                계약 형태
+                <select name="workType" required>
+                  <option value="">선택</option>
+                  <option>정규직</option>
+                  <option>프리랜서</option>
+                  <option>성과급 영업</option>
+                  <option>파트타임</option>
+                </select>
+              </label>
+            </div>
+            <div class="form-row">
+              <label>
+                주 담당 권역
+                <input name="region" type="text" required placeholder="예: 서울·경기" />
+              </label>
+              <label>
+                이동 수단
+                <select name="transport" required>
+                  <option value="">선택</option>
+                  <option>자차</option>
+                  <option>대중교통</option>
+                  <option>렌터카</option>
+                  <option>혼합</option>
+                </select>
+              </label>
+            </div>
+            <label>
+              활동 가능 지역
+              <input name="coverage" type="text" required placeholder="예: 서울, 경기, 강원 일부" />
+            </label>
+            <label>
+              기존 거래처/협회/동호회 인맥
+              <textarea name="existingNetwork" required rows="3" placeholder="없으면 '없음' 입력"></textarea>
+            </label>
+            <div class="form-row">
+              <label>
+                은행
+                <input name="bankName" type="text" required />
+              </label>
+              <label>
+                예금주
+                <input name="accountHolder" type="text" required />
+              </label>
+            </div>
+            <label>
+              계좌번호
+              <input name="accountNumber" type="text" required inputmode="numeric" />
+            </label>
+            <label class="check-label">
+              <input name="agreeOwnership" type="checkbox" required />
+              <span>거래처 담당권과 중복 거래처 검토 기준에 동의합니다.</span>
+            </label>
+            <label class="check-label">
+              <input name="agreeSettlement" type="checkbox" required />
+              <span>성과 배분과 월별 정산 승인 기준에 동의합니다.</span>
+            </label>
+            <button class="ghost-button" type="submit">가입 신청</button>
+          </form>
+        </section>
+      </div>
+    </section>
+
+    <div class="app-shell is-hidden" id="appShell">
+      <aside class="sidebar" aria-label="주요 메뉴">
+        <div class="brand">
+          <div class="brand-mark">KK</div>
+          <div>
+            <strong>Billywear KKLLA</strong>
+            <span>Sales Control</span>
+          </div>
+        </div>
+
+        <nav class="nav-list" aria-label="화면 이동">
+          <button class="nav-item is-active" data-view="dashboard">대시보드</button>
+          <button class="nav-item" data-view="accounts">거래처</button>
+          <button class="nav-item manager-only" data-view="people">직원관리</button>
+          <button class="nav-item" data-view="activity">영업기록</button>
+          <button class="nav-item" data-view="contracts">계약정산</button>
+          <button class="nav-item" data-view="audit">변경이력</button>
+        </nav>
+
+        <div class="user-box">
+          <span id="currentRole">로그인됨</span>
+          <strong id="currentUserName">-</strong>
+          <button class="ghost-button full-button" id="logoutBtn" type="button">로그아웃</button>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">서버 운영판</p>
+            <h1 id="viewTitle">대시보드</h1>
+          </div>
+          <div class="top-actions">
+            <button class="ghost-button" id="refreshBtn" type="button">새로고침</button>
+            <button class="ghost-button" id="exportBtn" type="button">월별 정산표</button>
+          </div>
+        </header>
+
+        <div class="toast" id="toast" role="status"></div>
+
+        <section class="view is-visible" id="dashboardView" data-title="대시보드">
+          <div class="metrics-grid" id="metricsGrid"></div>
+          <div class="content-grid">
+            <section class="panel wide">
+              <div class="panel-header">
+                <div>
+                  <h2>직원별 현황</h2>
+                  <p>활동, 거래처, 승인 계약 기준</p>
+                </div>
+                <select id="dashboardMonth"></select>
+              </div>
+              <div class="rep-board" id="repBoard"></div>
+            </section>
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2>중복 의심</h2>
+                  <p>이름, 주소, 연락처 기준</p>
+                </div>
+              </div>
+              <div class="alert-list" id="duplicateList"></div>
+            </section>
+          </div>
+          <div class="content-grid">
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2>후속관리</h2>
+                  <p>7일 안에 움직일 거래처</p>
+                </div>
+              </div>
+              <div class="task-list" id="followupList"></div>
+            </section>
+            <section class="panel wide">
+              <div class="panel-header">
+                <div>
+                  <h2>최근 영업 활동</h2>
+                  <p>서버에 저장된 활동 기록</p>
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>일자</th>
+                      <th>직원</th>
+                      <th>거래처</th>
+                      <th>유형</th>
+                      <th>내용</th>
+                    </tr>
+                  </thead>
+                  <tbody id="recentActivityRows"></tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="accountsView" data-title="거래처">
+          <div class="toolbar">
+            <div class="search-box">
+              <span aria-hidden="true">⌕</span>
+              <input id="accountSearch" type="search" placeholder="거래처명, 주소, 담당자 검색" />
+            </div>
+            <select id="ownerFilter"></select>
+            <select id="statusFilter"></select>
+          </div>
+
+          <div class="accounts-layout">
+            <section class="panel accounts-table-panel">
+              <div class="panel-header">
+                <div>
+                  <h2>거래처 목록</h2>
+                  <p>담당권, 상태, 최근 활동</p>
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>거래처</th>
+                      <th>지역</th>
+                      <th>담당</th>
+                      <th>상태</th>
+                      <th>최근 활동</th>
+                      <th>담당권</th>
+                    </tr>
+                  </thead>
+                  <tbody id="accountRows"></tbody>
+                </table>
+              </div>
+            </section>
+            <section class="panel detail-panel" id="accountDetailPanel"></section>
+          </div>
+        </section>
+
+        <section class="view manager-only" id="peopleView" data-title="직원관리">
+          <section class="panel">
+            <div class="panel-header">
+              <div>
+                <h2>영업사원 계정</h2>
+                <p>가입정보, 권역, 승인상태, 정산정보</p>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>이름</th>
+                    <th>연락처</th>
+                    <th>담당 권역</th>
+                    <th>정산 계좌</th>
+                    <th>상태</th>
+                    <th>관리</th>
+                  </tr>
+                </thead>
+                <tbody id="peopleRows"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <section class="view" id="activityView" data-title="영업기록">
+          <div class="form-layout">
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2>영업 활동 입력</h2>
+                  <p>방문, 연락, 샘플, 견적, 계약 전 단계</p>
+                </div>
+              </div>
+              <form id="activityForm" class="stacked-form">
+                <label>
+                  영업사원
+                  <select name="repId" required></select>
+                </label>
+                <label>
+                  거래처
+                  <select name="accountId" required></select>
+                </label>
+                <div class="form-row">
+                  <label>
+                    일자
+                    <input name="date" type="date" required />
+                  </label>
+                  <label>
+                    유형
+                    <select name="type" required>
+                      <option>방문</option>
+                      <option>전화</option>
+                      <option>카톡</option>
+                      <option>샘플 전달</option>
+                      <option>견적 발송</option>
+                      <option>계약 협의</option>
+                      <option>사후관리</option>
+                    </select>
+                  </label>
+                </div>
+                <label>
+                  만난 사람
+                  <input name="contact" type="text" placeholder="대표, 총무, 동호회장 등" />
+                </label>
+                <label>
+                  영업 내용
+                  <textarea name="summary" required rows="5"></textarea>
+                </label>
+                <label>
+                  다음 액션
+                  <input name="nextAction" type="text" placeholder="견적 전달, 디자인 시안, 재방문 등" />
+                </label>
+                <div class="form-row">
+                  <label>
+                    다음 일정
+                    <input name="nextDate" type="date" />
+                  </label>
+                  <label>
+                    현장 메모
+                    <input name="locationNote" type="text" />
+                  </label>
+                </div>
+                <button class="primary-button" type="submit">기록 저장</button>
+              </form>
+            </section>
+
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2>신규 거래처</h2>
+                  <p>서버에서 중복 여부를 다시 검토합니다.</p>
+                </div>
+              </div>
+              <form id="accountForm" class="stacked-form">
+                <label>
+                  거래처명
+                  <input name="name" type="text" required />
+                </label>
+                <div class="form-row">
+                  <label>
+                    유형
+                    <select name="category" required>
+                      <option>당구장</option>
+                      <option>동호회</option>
+                      <option>협회</option>
+                      <option>프로팀</option>
+                      <option>기타</option>
+                    </select>
+                  </label>
+                  <label>
+                    지역
+                    <input name="region" type="text" required />
+                  </label>
+                </div>
+                <label>
+                  주소
+                  <input name="address" type="text" required />
+                </label>
+                <div class="form-row">
+                  <label>
+                    담당자
+                    <input name="contactName" type="text" />
+                  </label>
+                  <label>
+                    연락처
+                    <input name="phone" type="tel" />
+                  </label>
+                </div>
+                <label>
+                  기본 담당자
+                  <select name="ownerId" required></select>
+                </label>
+                <label>
+                  예상 금액
+                  <input name="expectedAmount" type="number" min="0" step="10000" value="0" />
+                </label>
+                <div class="duplicate-preview" id="newAccountDuplicatePreview"></div>
+                <button class="primary-button" type="submit">거래처 등록</button>
+              </form>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="contractsView" data-title="계약정산">
+          <div class="form-layout">
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2>계약 등록</h2>
+                  <p>성과 귀속과 지급 기준</p>
+                </div>
+              </div>
+              <form id="contractForm" class="stacked-form">
+                <label>
+                  거래처
+                  <select name="accountId" required></select>
+                </label>
+                <div class="form-row">
+                  <label>
+                    계약일
+                    <input name="date" type="date" required />
+                  </label>
+                  <label>
+                    계약금액
+                    <input name="amount" type="number" min="0" step="10000" required />
+                  </label>
+                </div>
+                <div class="form-row">
+                  <label>
+                    최초 발굴자
+                    <select name="originatorId" required></select>
+                  </label>
+                  <label>
+                    계약 성사자
+                    <select name="closerId" required></select>
+                  </label>
+                </div>
+                <label>
+                  사후관리 담당
+                  <select name="managerId" required></select>
+                </label>
+                <div class="split-editor">
+                  <label>
+                    발굴
+                    <input name="originatorShare" type="number" min="0" max="100" value="30" />
+                  </label>
+                  <label>
+                    성사
+                    <input name="closerShare" type="number" min="0" max="100" value="50" />
+                  </label>
+                  <label>
+                    관리
+                    <input name="managerShare" type="number" min="0" max="100" value="20" />
+                  </label>
+                </div>
+                <label>
+                  관리자 판단 메모
+                  <textarea name="memo" rows="4"></textarea>
+                </label>
+                <button class="primary-button" type="submit">정산 대기 등록</button>
+              </form>
+            </section>
+
+            <section class="panel wide">
+              <div class="panel-header">
+                <div>
+                  <h2>정산 목록</h2>
+                  <p>승인 전후 계약과 배분액</p>
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>계약일</th>
+                      <th>거래처</th>
+                      <th>금액</th>
+                      <th>성과 배분</th>
+                      <th>상태</th>
+                      <th>관리</th>
+                    </tr>
+                  </thead>
+                  <tbody id="contractRows"></tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="auditView" data-title="변경이력">
+          <section class="panel">
+            <div class="panel-header">
+              <div>
+                <h2>감사 로그</h2>
+                <p>등록, 수정, 승인, 로그인 기록</p>
+              </div>
+            </div>
+            <div class="audit-list" id="auditList"></div>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <dialog id="exportDialog" class="modal">
+      <div class="modal-header">
+        <h2>월별 정산표</h2>
+        <button class="icon-button" id="closeExportBtn" type="button" aria-label="닫기">×</button>
+      </div>
+      <div id="exportContent"></div>
+    </dialog>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

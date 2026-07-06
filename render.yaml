@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: billywear-kklla-sales
+    runtime: python
+    plan: starter
+    region: singapore
+    buildCommand: ""
+    startCommand: "python server.py --host 0.0.0.0 --port $PORT"
+    healthCheckPath: /api/health
+    envVars:
+      - key: KKLLA_DATA_DIR
+        value: /var/data/kklla
+      - key: KKLLA_RUNTIME_DIR
+        value: /var/data/runtime
+      - key: KKLLA_ADMIN_PASSWORD
+        sync: false
+    disk:
+      name: kklla-data
+      mountPath: /var/data
+      sizeGB: 1
